@@ -1,17 +1,17 @@
 from webexteamssdk import WebexTeamsAPI
 from ncclient import manager
 import xml.dom.minidom #use to change the xml output to prettify format.
-
+#Connect to the Webex bot & room
 WEBEX_BOT_TOKEN = "MmM5ODQwMjYtYzNhYi00ZTExLWFiZjEtODUwMzU1ZjM0YjZiYTFjMjY5OGMtMDA2_P0A1_856a32b6-339b-4d3d-89fb-dabbd25aff7b"
 WEBEX_ROOM_ID = "Y2lzY29zcGFyazovL3VybjpURUFNOnVzLXdlc3QtMl9yL1JPT00vMDg4MWJlODAtYjk2OS0xMWVmLWIwNmQtZjU4YzY5NmY4ZDIx"
-
+#send notification to Webex
 def send_webex_notification(message):
     api = WebexTeamsAPI(access_token=WEBEX_BOT_TOKEN)
     api.messages.create(roomId=WEBEX_ROOM_ID, text=message)
     print("Notification sent to WebEx Teams.")
-
+#send notification to Webex that the bot is running
 send_webex_notification("Program Running.")
-
+#Device of CSR1000v
 DEVICE = {
     "host": "192.168.166.128",
     "port": 830,
@@ -27,7 +27,7 @@ def connect_to_device():
         password=DEVICE['password'],
         hostkey_verify=False
     )
-# filter out to ietf-interaces only
+# filter out to xmlns
 def get_running_config(netconf_manager):
     filter = '''
     <filter>
@@ -59,7 +59,6 @@ def edit_config(netconf_manager, interface_name, new_description):
     else:
         print("Failed to update configuration.")
         return False
-
 #display the updated running-config
 def validate_changes(netconf_manager, interface_name, expected_description):
     updated_config = get_running_config(netconf_manager)
@@ -70,28 +69,28 @@ def validate_changes(netconf_manager, interface_name, expected_description):
 
 def automate_network_change(interface_name, new_description):
     try:
-        # Step 1: Connect to the server
+        #Connect to the server
         with connect_to_device() as netconf_manager:
             print("Connected to the NETCONF server.")
 
-            # Step 2: Retrieve current configuration
+            #Retrieve current configuration
             current_config = get_running_config(netconf_manager)
 
-            # Step 3: Apply configuration changes
+            #Apply configuration changes
             if edit_config(netconf_manager, interface_name, new_description):
                 print("Configuration updated successfully.")
 
-                # Step 4: Validate the changes
+                #Validate the changes
                 validate_changes(netconf_manager, interface_name, new_description)
 
-                # Step 5: Send WebEx notification
+                #Send WebEx notification
                 message = f"Interface {interface_name} description updated to '{new_description}'."
                 send_webex_notification(message)
-
+    #send error if the input is error
     except Exception as e:
         print(f"An error occurred: {e}")
         send_webex_notification(f"Automation task failed: {e}")
-
+#Add changes to Interface and Description
 if __name__ == "__main__":
     interface = "1"
     description = "Test2 Updated via Automation"
